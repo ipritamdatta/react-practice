@@ -1,70 +1,213 @@
-# Getting Started with Create React App
+BASIC OF REDUX: 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
 
-In the project directory, you can run:
+##### 
+Create a project with react. 
+Then, 
 
-### `npm start`
+1) npm run start
+2) npm install redux react-redux
+3) create actions folder inside src folder. Create index.js file inside actions folder. 
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+4) create reducers folder inside src folder and create upDown.js file inside reducers folder.
+5) create store.js file inside src folder.
+6) In app.js write: 
+```
+import React from 'react'
+import "./App.css"
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+const App = () => {
+  return (
+    <>
+      <div className="container">
+        <h1>Increment / Decrement counter</h1>
+        <h4>Using react and redux</h4>
 
-### `npm test`
+        <div className="quantity">
+          <a className="quantity__minus" title='Decrement'><span>-</span></a>
+          <input type="text" name='quantity' className='quantity__input'/>
+          <a className="quantity__plus" title='Increment'><span>+</span></a>
+        </div>
+        
+      </div>
+    </>
+  )
+}
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+export default App;
 
-### `npm run build`
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+7) Inside actions->index.js file write: 
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+export const incNumber = () => { 
+    return {
+        type: "INCREMENT"
+    }
+}
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+export const decNumber = () => { 
+    return {
+        type: "DECREMENT"
+    }
+}
+```
 
-### `npm run eject`
+###### NOTE: IN ACTION: We have told what are the actions we have/ are present.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+8) Now, what will this types do, we need to tell this. So, to do that, go to reducers->upDown.js file and write: 
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
+const initialState = 0;
+const changeTheNumber = (state = initialState, action) => {
+    switch(action.type)
+    {
+        case "INCREMENT": return state + 1;
+        case "DECREMENT": return state - 1;
+        default: return state;
+    }
+}
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+export default changeTheNumber;
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+9) in reducers->index.js write: 
 
-## Learn More
+```
+import changeTheNumber from "./upDown";
+import { combineReducers } from "redux";
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+const rootReducer = combineReducers({
+    changeTheNumber
+})
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+export default rootReducer;
+```
 
-### Code Splitting
+###### NOTE: In reducer we have told what to do with the actions.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+10) 
+###### NOTE: We need to add the reducer in store.js
 
-### Analyzing the Bundle Size
+In store.js of the src folder write: 
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```
+import { createStore } from 'redux';
+import rootReducer from "./reducers/index";
 
-### Making a Progressive Web App
+const store = createStore(
+    rootReducer,
+    window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__() //this line is for redux chrome devtools & add redux devtools in chrome for this.
+)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+export default store;
+```
 
-### Advanced Configuration
+11) 
+###### Import the store in index.js
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+write in index.js of src folder: 
 
-### Deployment
+```
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+import store from "./store";
+import {Provider} from 'react-redux';
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+store.subscribe(() => console.log(store.getState()))
 
-### `npm run build` fails to minify
+ReactDOM.render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </React.StrictMode>,
+  document.getElementById('root')
+);
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+
+```
+
+###### NOTE: Now our root App.js has the state value to use in all over the project dom.
+
+###### TO DISPLAY THE STATE VALUE (useSelector)
+
+1) useSelector is used to get the state values. and dispatch triggers the action then action goes to reducer.
+to display, In App.js write:
+
+```
+import React from 'react'
+import "./App.css"
+import {useSelector, useDispatch} from 'react-redux'
+import {incNumber, decNumber} from './actions/index'
+
+const App = () => {
+
+  const myState = useSelector((state) => state.changeTheNumber);
+  const dispatch = useDispatch();
+
+  return (
+    <>
+      <div className="container">
+        <h1>Increment / Decrement counter</h1>
+        <h4>Using react and redux</h4>
+
+        <div className="quantity">
+          <a className="quantity__minus" title='Decrement' onClick={() => dispatch(decNumber())}><span>-</span></a>
+          <input type="text" name='quantity' className='quantity__input' value={myState}/>
+          <a className="quantity__plus" title='Increment' onClick={() => dispatch(incNumber())}><span>+</span></a>
+        </div>
+        
+      </div>
+    </>
+  )
+}
+
+export default App;
+
+```
+
+###### How to pass parameters in incNumber method
+
+1) When user clicks on the App.js's increment button (example on onClick={() => dispatch(incNumber())}) then, we will
+pass a parameter on the incNumber() like the following in App.js: 
+
+```
+onClick={() => dispatch(incNumber(5))}
+```
+
+2) Then, as dispatch triggers the action, we will go to actions->index.js and will write: 
+
+```
+export const incNumber = (num) => { 
+    return {
+        type: "INCREMENT",
+        payload: num
+    }
+}
+```
+
+3) Then action goes to reducer, so in reducers->upDown.js we will write: 
+
+```
+const initialState = 0;
+const changeTheNumber = (state = initialState, action) => {
+    switch(action.type)
+    {
+        case "INCREMENT": return state + action.payload;
+        case "DECREMENT": return state - 1;
+        default: return state;
+    }
+}
+
+export default changeTheNumber;
+```
