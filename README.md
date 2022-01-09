@@ -545,8 +545,35 @@ export const selectedProductReducer = (state={}, {type, payload}) => {
 }
 ```
 
-3) In containers->ProductDetail.js write: 
+3) In containers->ProductDetail.js write the above portion: 
 
 ```
+import React, {useEffect} from 'react';
+import {useParams} from "react-router-dom";
+import axios from "axios";
+import {useDispatch, useSelector} from "react-redux"
+import { selectedProduct, removeSelectedProduct } from '../redux/actions/productActions';
 
+const ProductDetail = () => {
+    const product = useSelector((state) => state.product);
+    const {image, title, price, category, description} = product;
+    const {productId} = useParams();
+    const dispatch = useDispatch();
+
+    const fetchProductDetail = async () => {
+        const response = await axios.get(`https://fakestoreapi.com/products/${productId}`)
+                    .catch((err) => {
+                        console.log("Err ",err);
+                    });
+
+        dispatch(selectedProduct(response.data));
+    }
+
+    useEffect(() => {
+        if(productId && productId !== "") fetchProductDetail();
+
+        return () => {
+            dispatch(removeSelectedProduct());
+        }
+    }, [productId]);
 ```
