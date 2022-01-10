@@ -577,3 +577,212 @@ const ProductDetail = () => {
         }
     }, [productId]);
 ```
+
+
+###### REDUX THUNK (MIDDLEWARE)
+
+1. Create a new folder inside src called apis.
+2. Create a file inside apis folder called fakeStoreApi.js and write: 
+
+```
+import axios from 'axios';
+
+export default axios.create({
+    baseURL: "https://fakestoreapi.com"
+})
+```
+3. Inside action-types.js write: 
+
+```
+export const ActionTypes = {
+    FETCH_PRODUCTS: "FETCH_PRODUCTS",
+    SET_PRODUCTS:"SET_PRODUCTS",
+    SELECTED_PRODUCT:"SELECTED_PRODUCT",
+    REMOVE_SELECTED_PRODUCT:"REMOVE_SELECTED_PRODUCT"
+};
+```
+4. Inside redux->actions->productActions.js write: 
+
+```
+
+export const fetchProducts = async () => {
+    const response = await axios.get("/products");
+
+    return {
+        type: ActionTypes.SET_PRODUCTS,
+        payload: response
+    }
+}
+```
+5. Inside the containers->ProductListing.js write:
+Do the following in the first half of the code
+```
+import React, {useEffect} from 'react';
+import axios from 'axios';
+import {useSelector, useDispatch} from 'react-redux';
+import ProductComponent from "./ProductComponent";
+import {setProducts, fetchProducts} from '../redux/actions/productActions';
+
+const ProductListing = () => {
+    const products = useSelector((state) => state);
+    // console.log(products);
+    const dispatch = useDispatch();
+
+    // const fetchProducts = async () => {
+    //     const response = await axios
+    //         .get("https://fakestoreapi.com/products")
+    //         .catch((err) => {
+    //             console.log("Err", err);
+    //         });
+
+    //     dispatch(setProducts(response.data));
+    // };
+
+    // useEffect(() => {
+    //     fetchProducts();
+    // }, []);
+
+    useEffect(() => {
+        dispatch(fetchProducts());
+    })
+
+    console.log("Products: ", products);
+```
+
+6. Now it's time to add the middleware:
+
+npm install redux-thunk
+
+7. Inside redux->store.js file write: 
+
+```
+import {createStore, applyMiddleware, compose} from 'redux'
+import reducers from './reducers/index'
+import thunk from 'redux-thunk';
+
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
+const store = createStore(
+    reducers,
+    //{}, //initial state
+    // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+    composeEnhancers(applyMiddleware(thunk))
+);
+
+export default store;
+```
+
+8. Now, again in productAction.js, update the fetchProducts method:
+
+```
+import fakeStoreApi from '../../apis/fakeStoreApi';
+import {ActionTypes} from '../contants/action-types'
+
+export const fetchProducts = () => {
+    return async function (dispatch, getState) {
+        const response = await fakeStoreApi.get("/products");
+
+        dispatch({
+            type: ActionTypes.FETCH_PRODUCTS,
+            payload: response.data
+        });
+    }
+}
+```
+
+or, shortcut (simplified way): 
+
+```
+import fakeStoreApi from '../../apis/fakeStoreApi';
+import {ActionTypes} from '../contants/action-types'
+
+export const fetchProducts = () => async (dispatch) => {
+    const response = await fakeStoreApi.get("/products");
+
+    dispatch({
+        type: ActionTypes.FETCH_PRODUCTS,
+        payload: response.data
+    });
+}
+```
+
+9. Inside reducers->productReducer.js write:
+
+```
+export const productReducer = (state = initialState, {type, payload}) => {
+    // here {type, payload} came from action by destructuring
+
+    switch(type) {
+        case ActionTypes.SET_PRODUCTS:
+            return {
+                ...state,
+                products: payload
+            };
+        case ActionTypes.FETCH_PRODUCTS:
+            return {
+                ...state,
+                products: payload
+            }
+        default: 
+            return state;
+    }
+    
+}
+```
+
+
+###### CREATE MIDDLEWARE for product details
+
+1. In productAction.js write:
+
+```
+export const fetchProduct = (id) => async (dispatch) => {
+    const response = await fakeStoreApi.get(`/products/${id}`);
+    dispatch({
+        type: ActionTypes.SELECTED_PRODUCT,
+        payload: response.data
+    });
+}
+```
+
+2. Inside containers->ProductDetail.js write:
+Do the following in the first half of the code
+```
+import React, {useEffect} from 'react';
+import {useParams} from "react-router-dom";
+import axios from "axios";
+import {useDispatch, useSelector} from "react-redux"
+import { selectedProduct, removeSelectedProduct, fetchProduct } from '../redux/actions/productActions';
+
+const ProductDetail = () => {
+    const product = useSelector((state) => state.product);
+    const {image, title, price, category, description} = product;
+    const {productId} = useParams();
+    const dispatch = useDispatch();
+
+    // const fetchProductDetail = async () => {
+    //     const response = await axios
+    //                 .get(`https://fakestoreapi.com/products/${productId}`)
+    //                 .catch((err) => {
+    //                     console.log("Err ",err);
+    //                 });
+
+    //     dispatch(selectedProduct(response.data));
+    // }
+
+    // useEffect(() => {
+    //     if(productId && productId !== "") fetchProductDetail();
+
+    //     return () => {
+    //         dispatch(removeSelectedProduct());
+    //     }
+    // }, [productId]);
+
+    useEffect(() => {
+        if(productId && productId !== "") dispatch(fetchProduct(productId));
+
+        return () => {
+            dispatch(removeSelectedProduct());
+        }
+    }, []);
+```
